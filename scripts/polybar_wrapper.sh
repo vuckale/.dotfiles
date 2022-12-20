@@ -73,8 +73,10 @@ if [ "$SCRIPT" != "1" ]; then
                 ;;
             --disk_space)
                 source "$(dirname "$0")/disk_space.sh"
-                [ "$ICON" == 1 ] && echo -n "󰋊 "
-                [ "$TEXT" == 1 ] &&  ([ "$checksum" == 1 ] && echo -n "${used}/${size}" || echo -n " ${used}/${size}")
+                # [ "$ICON" == 1 ] && echo -n "󰄫 "
+                # [ "$TEXT" == 1 ] &&  ([ "$checksum" == 1 ] && echo -n "${used}/${size}" || echo -n " ${used}/${size}")
+                [ "$ICON" == 1 ] && echo -n "󰄫 "
+                [ "$TEXT" == 1 ] &&  ([ "$checksum" == 1 ] && echo -n "${available}" || echo -n " ${available}")
                 ;;
             --bluetooth_status)
                 source "$(dirname "$0")/bluetooth_status.sh"
@@ -114,15 +116,14 @@ if [ "$SCRIPT" != "1" ]; then
                 ;;
             --lsblk_info)
                 output=$($(dirname "$0")/lsblk_info.sh --count)
-                #source "$(dirname "$0")/mount_ctrl.sh"
-                #count=0
-                if [ "$output" = "0" ]; then
-                    sep=$( echo -e "" )
-                else
-                    sep=$( echo -e " | " )
+                sep=""
+                if [ "$output" -gt "0" ]; then
+                    sep=$( echo -e " | 󱊞" )
                 fi
-                [ $ICON == 1 ] && echo -n "%{A1:gnome-disks:}󰋊$sep%{A} "
-                [ $TEXT == 1 ] &&  ([ "$checksum" == 1 ] && echo -n "$output" || echo -n " $output")
+                [ $ICON == 1 ] && echo -n "%{A1:gnome-disks:}󰋊$sep%{A}"
+                if [ $output -gt 0 ]; then 
+                    [ $TEXT == 1 ] && ([ "$checksum" == 1 ] && echo -n "$output" || echo -n " $output")
+                fi
                 ;;
             --public_ip)
                 output=$($(dirname "$0")/public_ip.sh)
@@ -136,20 +137,80 @@ if [ "$SCRIPT" != "1" ]; then
                     CAPS_LOCK_STATUS_TEXT="Caps Lock On"
                 else
                     CAPS_LOCK_STATUS_ICON=""
-                    CAPS_LOCK_STATUS_TEXT=""
+                    CAPS_LOCK_STATUS_TEXT="Caps Lock Off"
                 fi
                 if [[ "$NUM_LOCK_STATUS" == "on" ]]; then
                     NUM_LOCK_STATUS_ICON="%{F$ALERT}󰎠%{F-}"
                     NUM_LOCK_STATUS_TEXT="Num Lock On"
                 else
                     NUM_LOCK_STATUS_ICON=""
-                    NUM_LOCK_STATUS_TEXT=""
+                    NUM_LOCK_STATUS_TEXT="Num Lock Off"
                 fi
 
                 [ $ICON == 1 ] && echo -n "$CAPS_LOCK_STATUS_ICON"
                 [ $TEXT == 1 ] &&  ([ "$checksum" == 1 ] && echo -n "$CAPS_LOCK_STATUS_TEXT" || echo -n " $CAPS_LOCK_STATUS_TEXT")
                 [ $ICON == 1 ] && echo -n " $NUM_LOCK_STATUS_ICON"
                 [ $TEXT == 1 ] &&  ([ "$checksum" == 1 ] && echo -n " $NUM_LOCK_STATUS_TEXT" || echo -n " $NUM_LOCK_STATUS_TEXT")
+                ;;
+            --cpu_info)
+                # output=$($(dirname "$0")/cpuinfo.sh)
+                source "$(dirname "$0")/cpuinfo.sh"
+                [ $ICON == 1 ] && echo -n "󰍛"
+                [ $TEXT == 1 ] &&  ([ "$checksum" == 1 ] && echo -n "$cpu_temp, $cpu_freq_ghz, $cpu_usage, $cpu_fan_speed" || echo -n " $cpu_temp, $cpu_freq_ghz, $cpu_usage, $cpu_fan_speed")
+                ;;
+            --audio)
+                output=$($(dirname "$0")/pactl.sh --get-volume)
+                # 󰄱 󰄮 󰸈 󰕿 󰖀 󰕾
+                mute_status=$($(dirname "$0")/pactl.sh --mute_status)
+                if [ "$mute_status" == "no" ]; then
+                    if [ "$output" -le 100 ] && [ "$output" -ge 60 ]; then
+                        echo -n "󰕾 "
+                    fi
+                    if [ "$output" -lt 60 ] && [ "$output" -ge 20 ]; then
+                        echo -n "󰖀 "
+                    fi
+                    if [ "$output" -lt 20 ] && [ "$output" -ge 1 ]; then
+                        echo -n "󰕿 "
+                    fi
+                    if [ "$output" == 0 ]; then
+                        echo -n "󰸈 "
+                    fi
+
+                    let x="($output/20)"
+                    width=5
+                    for ((i=1;i<=$x;i++)); 
+                    do
+                        echo -n "󰄮"
+                    done
+                    if [ "$x" -lt $width ]; then
+                        for ((i=$x;i<=$width-1;i++));
+                        do
+                            echo -n "󰄱"
+                        done
+                    fi
+                    if [ "$output" -lt 10 ]; then
+                        output="${output}   "
+                    fi
+                    if [ "$output" -ge 10 ]; then
+                        output="${output}  "
+                    fi
+                    echo -n " $output%"
+                fi
+                if [ "$mute_status" == "yes" ]; then
+                    echo -n "%{F$FOREGROUND_ALT}󰸈 󰄱󰄱󰄱󰄱󰄱 $output%%{F-}"
+                fi
+                ;;
+            --mic_status)
+                output=$($(dirname "$0")/pactl.sh --mic_status)
+                if [ "$output" == "on" ]; then
+                    echo -n "%{F$ALERT}󰍬%{F-}"
+                else
+                    echo -n "󰍭"
+                fi 
+                ;;
+            --gpu_info)
+                source "$(dirname "$0")/gpu_info.sh"
+                echo -n "󰘚 $gpu_temp°C 󰈐 $gpu_fan%"
                 ;;
             *)
                 usage

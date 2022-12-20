@@ -18,10 +18,11 @@ done < <( lsblk -r | grep /media | cut -d' ' -f 1)
 count=$( echo -e "${#DRIVES[@]}\c" )
 
 get_mounted_drive_count(){
-    if [[ "$count" -gt "0" ]]; then
-	    # echo -e "%{F$FOREGROUND_ALT}󱊟%{F-} %{T7}$count%{T-}\c"
-        echo -n "$count"
-    fi
+    # if [[ "$count" -gt "0" ]]; then
+	#     # echo -e "%{F$FOREGROUND_ALT}󱊟%{F-} %{T7}$count%{T-}\c"
+    #     echo -n "$count"
+    # fi
+    echo -n "$count"
 }
 
 case "$1" in

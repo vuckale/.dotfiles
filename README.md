@@ -1,0 +1,1 @@
+a collection of dotfiles and scripts for my i3 wm setup
